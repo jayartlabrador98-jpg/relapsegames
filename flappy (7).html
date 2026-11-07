@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Flappy's Birds</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:skyblue;
+    font-family:Arial,sans-serif;
+    text-align:center;
+}
+
+  video::-webkit-media-controls-timeline {
+    display: none;
+}
+
+video::-webkit-media-controls-seek-back-button,
+video::-webkit-media-controls-seek-forward-button {
+    display: none;
+}
+  
+  video::-webkit-media-controls-volume-slider,
+video::-webkit-media-controls-mute-button,
+video::-webkit-media-controls-play-button {
+    display: none;
+}
+  
+canvas{
+    display:block;
+    margin:auto;
+    background:linear-gradient(#70c5ce,#ffffff);
+}
+
+#startBtn{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    padding:15px 40px;
+    font-size:25px;
+    font-weight:bold;
+    color:white;
+    background:linear-gradient(45deg,#4CAF50,#8BC34A);
+    border:3px solid white;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 5px 15px rgba(0,0,0,.3);
+}
+
+#gameOver{
+    display:none;
+    position:absolute;
+    top:30%;
+    width:100%;
+    font-size:35px;
+    color:red;
+    font-weight:bold;
+    z-index:5;
+    opacity:0;
+    transition:opacity 1s ease;
+}
+
+#videoBox{
+    display:none;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:400px;
+    text-align:center;
+    z-index:10;
+    opacity:0;
+    transition:opacity 1s ease;
+}
+
+.show{
+    opacity:1 !important;
+}
+
+video{
+    width:95vw;
+    height:auto;
+    border-radius:15px;
+}
+
+#restartBtn{
+    margin-top:15px;
+    padding:12px 35px;
+    font-size:20px;
+    font-weight:bold;
+    color:white;
+    background:linear-gradient(45deg,#ff9800,#ff5722);
+    border:3px solid white;
+    border-radius:30px;
+    cursor:pointer;
+    box-shadow:0 5px 15px rgba(0,0,0,.3);
+    transition:.3s;
+}
+
+#restartBtn:hover{
+    transform:scale(1.1);
+}
+
+#restartBtn:active{
+    transform:scale(.9);
+}
+    
+#relapseText{
+    font-size:55px;
+    font-weight:900;
+    letter-spacing:8px;
+    margin:0 0 20px 0;
+    color:white;
+    text-shadow:
+        0 0 5px #70c5ce,
+        0 0 15px #70c5ce,
+        0 0 30px #ffffff;
+    animation:
+        glow 1.5s infinite alternate,
+        slideDown 1s ease;
+}
+
+@keyframes glow{
+    from{
+        transform:scale(1);
+        opacity:.8;
+    }
+
+    to{
+        transform:scale(1.1);
+        opacity:1;
+    }
+}
+
+@keyframes slideDown{
+    from{
+        transform:translateY(-50px);
+        opacity:0;
+    }
+
+    to{
+        transform:translateY(0);
+        opacity:1;
+    }
+}
+    
+    #relapseText{
+    font-size:55px;
+    font-weight:900;
+    letter-spacing:8px;
+    margin:0 0 20px 0;
+    transition: color 0.5s, text-shadow 0.5s;
+}
+    
+
+    
+    
+
+/* ===== fullscreen lose video (PC / laptop / Android) ===== */
+#videoBox{
+    position:fixed !important;
+    top:0 !important;
+    left:0 !important;
+    transform:none !important;
+    width:100vw !important;
+    height:100vh !important;
+    height:100dvh !important;
+    max-height:none;
+    margin:0;
+    padding:0;
+    background:#000;
+    z-index:10;
+    overflow:hidden;
+}
+#videoBox video{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100% !important;
+    height:100% !important;
+    max-width:none;
+    max-height:none;
+    aspect-ratio:auto;
+    border-radius:0;
+    object-fit:contain;
+    background:#000;
+}
+#videoBox h1#relapseText{
+    position:absolute;
+    top:2.5%;
+    left:0;
+    right:0;
+    margin:0;
+    z-index:3;
+    pointer-events:none;
+    font-size:clamp(28px,7vw,64px);
+    letter-spacing:clamp(2px,1.5vw,10px);
+}
+#videoBox h3{
+    position:absolute;
+    top:calc(2.5% + clamp(40px,9vw,80px));
+    left:0;
+    right:0;
+    margin:0;
+    z-index:3;
+    pointer-events:none;
+    color:#fff;
+    text-shadow:0 2px 6px #000;
+}
+#videoBox br{display:none;}
+#videoBox #restartBtn{
+    position:absolute;
+    left:50%;
+    bottom:12%;
+    transform:translateX(-50%);
+    margin:0;
+    z-index:4;
+}
+#videoBox #restartBtn:hover{transform:translateX(-50%) scale(1.1);}
+#videoBox #restartBtn:active{transform:translateX(-50%) scale(.9);}
+</style>
+</head>
+
+<body>
+
+<h2>🐦 Flappy's Birds</h2>
+
+<canvas id="game" width="400" height="500"></canvas>
+
+<button id="startBtn" onclick="startGame()">
+▶ START GAME
+</button>
+
+<div id="gameOver">
+GAME OVER 😭
+<br><br>
+<button onclick="restart()">Restart</button>
+</div>
+
+
+<div id="videoBox">
+
+<h1 id="relapseText">RELAPSE</h1>
+
+<h3>Replay Moment 🎬</h3>
+
+<video id="loseVideo" playsinline controls controlsList="nodownload noplaybackrate">
+    <source src="lose.mp4" type="video/mp4">
+</video>
+
+<br>
+
+<button id="restartBtn" onclick="restart()" style="display:none;">
+🔄 Restart Game
+</button>
+
+</div>
+
+<script>
+  const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let birdImg = new Image();
+birdImg.src = "bird.jpg";
+
+let bird = {
+    x: 80,
+    y: 200,
+    size: 20,
+    gravity: 0.3,
+    jump: -5,
+    velocity: 0
+};
+
+let pipes = [];
+let score = 0;
+let game = false;
+  let pipeSpeed = 2;
+let pipeGap = 170;
+
+createPipe();
+
+function flap() {
+    if (game) {
+        bird.velocity = bird.jump;
+    }
+}
+
+document.addEventListener("keydown", flap);
+document.addEventListener("touchstart", flap);
+document.addEventListener("click", flap);
+
+function createPipe() {
+    let gap = pipeGap;
+    let top = Math.random() * 250 + 20;
+
+    pipes.push({
+        x: 400,
+        top: top,
+        bottom: top + gap,
+        width: 50
+    });
+}
+
+setInterval(() => {
+    if (game) {
+        createPipe();
+    }
+}, 2000);
+
+function update() {
+
+    if (!game) return;
+
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
+
+    for (let i = 0; i < pipes.length; i++) {
+
+        let p = pipes[i];
+
+        p.x -= pipeSpeed;
+
+        // Collision
+        if (
+            bird.x < p.x + p.width &&
+            bird.x + bird.size > p.x &&
+            (bird.y < p.top || bird.y + bird.size > p.bottom)
+        ) {
+            lose();
+        }
+
+        // Remove pipe when off screen
+        if (p.x + p.width < 0) {
+            pipes.splice(i, 1);
+            i--;
+        }
+    }
+
+    if (bird.y > canvas.height || bird.y < 0) {
+        lose();
+    }
+ 
+        if (score >= 400) {
+    // Very Extreme
+    pipeSpeed = 10;
+    pipeGap = 100;
+}
+        
+      if (score >= 3500) {
+    // Extreme
+    pipeSpeed = 8;
+    pipeGap = 100;
+}
+else if (score >= 2000) {
+    // Hard
+    pipeSpeed = 6;
+    pipeGap = 130;
+}
+        else if (score >= 1300) {
+    // Hard
+    pipeSpeed = 4;
+    pipeGap = 130;
+}
+else {
+    // Normal
+    pipeSpeed = 2;
+    pipeGap = 150;
+}
+    score++;
+}
+
+// Cartoon bird (used when bird.jpg is missing)
+function drawBird(x, y, size) {
+    const tilt = Math.max(-0.5, Math.min(0.9, bird.velocity * 0.07));
+    const flap = Math.sin(Date.now() / 70) * 5;
+    ctx.save();
+    ctx.translate(x + size / 2, y + size / 2);
+    ctx.rotate(tilt);
+    const r = size / 2;
+
+    // tail
+    ctx.fillStyle = "#e0a800";
+    ctx.beginPath();
+    ctx.moveTo(-r + 2, -2); ctx.lineTo(-r - 9, -7); ctx.lineTo(-r - 9, 5); ctx.closePath();
+    ctx.fill();
+
+    // body
+    ctx.fillStyle = "#ffd23f";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r + 2, r, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#c98f00"; ctx.lineWidth = 2; ctx.stroke();
+
+    // belly
+    ctx.fillStyle = "#fff3b0";
+    ctx.beginPath();
+    ctx.ellipse(3, 6, r * 0.6, r * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // wing
+    ctx.fillStyle = "#ffb300";
+    ctx.beginPath();
+    ctx.ellipse(-5, 3 + flap * 0.3, 9, 6 + Math.abs(flap) * 0.4, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#c98f00"; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // eye
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(8, -6, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#222";
+    ctx.beginPath(); ctx.arc(10, -6, 3, 0, Math.PI * 2); ctx.fill();
+
+    // beak
+    ctx.fillStyle = "#ff6a2b";
+    ctx.beginPath();
+    ctx.moveTo(r, -1); ctx.lineTo(r + 11, 3); ctx.lineTo(r, 8); ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function draw() {
+
+    ctx.clearRect(0, 0, 400, 500);
+
+    if (birdImg.complete && birdImg.naturalWidth > 0) {
+        ctx.drawImage(birdImg, bird.x, bird.y, 35, 35);
+    } else {
+        drawBird(bird.x, bird.y, 35);
+    }
+
+    ctx.fillStyle = "#4CAF50";
+
+    pipes.forEach(p => {
+
+        ctx.fillRect(
+            p.x,
+            0,
+            p.width,
+            p.top
+        );
+
+        ctx.fillRect(
+            p.x,
+            p.bottom,
+            p.width,
+            500
+        );
+
+        ctx.fillStyle = "#2e7d32";
+
+        for (let y = 0; y < p.top; y += 20) {
+            ctx.fillRect(
+                p.x,
+                y,
+                p.width,
+                5
+            );
+        }
+
+        for (let y = p.bottom; y < 500; y += 20) {
+            ctx.fillRect(
+                p.x,
+                y,
+                p.width,
+                5
+            );
+        }
+
+        ctx.fillStyle = "#4CAF50";
+    });
+
+    ctx.fillStyle = "black";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + score, 10, 30);
+}
+
+function loop() {
+
+    if (game) {
+        update();
+    }
+
+    draw();
+
+    requestAnimationFrame(loop);
+}
+
+loop();
+  function lose() {
+
+    game = false;
+
+    let gameOver = document.getElementById("gameOver");
+    let videoBox = document.getElementById("videoBox");
+
+    gameOver.style.display = "block";
+    videoBox.style.display = "block";
+      document.getElementById("relapseText").style.display="block";
+
+    setTimeout(() => {
+        gameOver.classList.add("show");
+        videoBox.classList.add("show");
+    }, 100);
+
+    let video = document.getElementById("loseVideo");
+    video.currentTime = 0;
+    video.muted = false;
+    video.volume = 1;
+
+    video.play().catch(() => {
+        console.log("Tap the screen to allow video playback.");
+    });
+
+    setTimeout(() => {
+        document.getElementById("restartBtn").style.display = "inline-block";
+    }, 6000);
+}
+
+function restart() {
+    
+  pipeSpeed = 2;
+pipeGap = 170;
+  
+    bird.y = 200;
+    bird.velocity = 0;
+
+    pipes = [];
+    score = 0;
+    game = true;
+
+    createPipe();
+
+    let gameOver = document.getElementById("gameOver");
+    let videoBox = document.getElementById("videoBox");
+    document.getElementById("relapseText").style.display="none";
+
+    gameOver.classList.remove("show");
+    videoBox.classList.remove("show");
+
+    setTimeout(() => {
+        gameOver.style.display = "none";
+        videoBox.style.display = "none";
+    }, 500);
+
+    let video = document.getElementById("loseVideo");
+
+allowPause = true;
+
+video.pause();
+video.currentTime = 0;
+
+setTimeout(() => {
+    allowPause = false;
+}, 500);
+
+    document.getElementById("restartBtn").style.display = "none";
+}
+
+function startGame() {
+
+  pipeSpeed = 2;
+pipeGap = 170;
+    game = true;
+
+    pipes = [];
+score = 0;
+
+while (pipes.length > 0) {
+    pipes.pop();
+}
+
+createPipe();
+
+    bird.y = 200;
+    bird.velocity = 0;
+
+
+    document.getElementById("startBtn").style.display = "none";
+}
+  
+  const video = document.getElementById("loseVideo");
+let lastTime = 0;
+let allowPause = false;
+
+video.addEventListener("timeupdate", () => {
+    lastTime = video.currentTime;
+});
+
+video.addEventListener("seeking", () => {
+    if (video.currentTime > lastTime + 0.1) {
+        video.currentTime = lastTime;
+    }
+});
+
+video.addEventListener("pause", () => {
+    if (!allowPause) {
+        video.play().catch(() => {});
+    }
+});
+
+video.addEventListener("volumechange", () => {
+    if (video.muted || video.volume === 0) {
+        video.muted = false;
+        video.volume = 1;
+    }
+});
+  
+    const videoElement = document.getElementById("loseVideo");
+const relapseText = document.getElementById("relapseText");
+
+let colorCanvas = document.createElement("canvas");
+let colorCtx = colorCanvas.getContext("2d");
+
+colorCanvas.width = 1;
+colorCanvas.height = 1;
+
+setInterval(() => {
+
+    if (!videoElement.paused && videoElement.readyState >= 2) {
+
+        colorCtx.drawImage(
+            videoElement,
+            0,
+            0,
+            1,
+            1
+        );
+
+        let pixel = colorCtx.getImageData(0,0,1,1).data;
+
+        let r = pixel[0];
+        let g = pixel[1];
+        let b = pixel[2];
+
+        let color = `rgb(${r},${g},${b})`;
+
+        // RELAPSE color follows video
+        relapseText.style.color = color;
+
+        relapseText.style.textShadow =
+        `
+        0 0 10px ${color},
+        0 0 20px ${color},
+        0 0 40px ${color}
+        `;
+    }
+
+},500);
+    const arayContainer = document.getElementById("arayContainer");
+
+
+function createAray(){
+
+    let text = document.createElement("div");
+
+    text.className = "arayBubble";
+    text.innerHTML = "ARAY MO!! 😭";
+
+    text.style.left = Math.random()*90 + "%";
+
+    text.style.fontSize =
+    (15 + Math.random()*15) + "px";
+
+
+    arayContainer.appendChild(text);
+
+
+    setTimeout(()=>{
+        text.remove();
+    },4000);
+
+}
+
+
+// gumawa ng maraming lumulutang
+let arayInterval;
+
+
+function startAray(){
+
+    arayInterval = setInterval(()=>{
+        createAray();
+    },300);
+
+}
+
+
+function startAray(){
+
+    arayInterval = setInterval(()=>{
+        createAray();
+    },900);
+
+}
+    
+</script>
+
+</body>
+</html>
